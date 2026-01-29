@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Invoicing System Pro - Cloud</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+    :root { --primary: #2563eb; }
+    body { background-color: #f8fafc; font-family: 'Segoe UI', system-ui, sans-serif; }
+    .loader { border-top-color: var(--primary); animation: spinner 0.6s linear infinite; }
+    @keyframes spinner { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    .tab-active { border-bottom: 3px solid var(--primary); color: var(--primary); font-weight: 700; }
+    .card { background: white; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+    .btn-primary { background-color: var(--primary); transition: all 0.2s; }
+    .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+  </style>
+</head>
+<body class="pb-20">
+
+  <!-- CONFIGURATION - REPLACE THIS URL -->
+  <script>
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzOsKtFhZrF2OlSCqwLMPRTso5riYDp7JpwXVjfxKFyLSpSGd8YqVwUo-h2xRbmVW6-/exec"; 
+  </script>
+
+  <!-- Login Overlay -->
+  <div id="loginSection" class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-50">
+    <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md mx-4">
+      <div class="text-center mb-8">
+        <div class="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+          <i class="fas fa-file-invoice-dollar fa-2x"></i>
+        </div>
+        <h1 class="text-2xl font-bold text-gray-800">Système Cloud</h1>
+        <p class="text-gray-500">Accès GitHub Pro</p>
+      </div>
+      <div class="space-y-4">
+        <select id="username" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none">
+          <option value="facture">FACTURE (F)</option>
+          <option value="devis">DEVIS (D)</option>
+        </select>
+        <input type="password" id="password" placeholder="Mot de passe" class="w-full px-4 py-3 rounded-lg border border-gray-300">
+        <button onclick="handleLogin()" id="loginBtn" class="w-full btn-primary text-white font-bold py-3 rounded-lg flex items-center justify-center">
+          <span id="loginBtnText">Se connecter</span>
+          <div id="loginLoader" class="hidden loader w-5 h-5 border-2 border-white rounded-full ml-2"></div>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- App Content (Hidden until login) -->
+  <div id="appSection" class="hidden max-w-4xl mx-auto px-4 pt-6">
+    <header class="flex justify-between items-center mb-6">
+      <h2 id="userDisplay" class="text-xl font-bold"></h2>
+      <button onclick="location.reload()" class="text-red-500"><i class="fas fa-sign-out-alt"></i></button>
+    </header>
+
+    <nav class="flex border-b mb-6 bg-white rounded-t-xl">
+      <button onclick="showTab(1)" id="tabBtn1" class="flex-1 py-4 tab-active">Stats</button>
+      <button onclick="showTab(2)" id="tabBtn2" class="flex-1 py-4 text-gray-500">Saisie</button>
+      <button onclick="showTab(3)" id="tabBtn3" class="flex-1 py-4 text-gray-500">Historique</button>
+    </nav>
+
+    <div id="tab1" class="grid grid-cols-2 gap-4">
+        <div class="card p-5 border-l-4 border-blue-500">
+            <p class="text-xs font-bold text-gray-500">FACTURES</p>
+            <h3 id="statFacture" class="text-2xl font-black">0</h3>
+        </div>
+        <div class="card p-5 border-l-4 border-green-500">
+            <p class="text-xs font-bold text-gray-500">DEVIS</p>
+            <h3 id="statDevis" class="text-2xl font-black">0</h3>
+        </div>
+    </div>
+
+    <div id="tab2" class="hidden space-y-4">
+        <div class="card p-6">
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <input type="number" id="docNumber" placeholder="N°" class="border p-2 rounded">
+                <input type="date" id="docDate" class="border p-2 rounded">
+            </div>
+            <input list="clientList" id="clientName" placeholder="Nom du Client" class="w-full border p-2 rounded mb-2">
+            <datalist id="clientList"></datalist>
+            <input type="text" id="iceNumber" placeholder="ICE" class="w-full border p-2 rounded">
+        </div>
+        <div class="card p-6">
+            <div id="itemsContainer" class="space-y-2"></div>
+            <button onclick="addRow()" class="mt-4 text-blue-600 text-sm font-bold">+ Ajouter une ligne</button>
+            <div class="text-right text-xl font-bold mt-4" id="totalDisplay">0.00 DH</div>
+        </div>
+        <button onclick="submitDoc()" id="submitBtn" class="w-full btn-primary text-white py-4 rounded-xl font-bold">Enregistrer</button>
+    </div>
+
+    <div id="tab3" class="hidden space-y-3" id="historyList"></div>
+  </div>
+
+  <div id="toast" class="hidden fixed bottom-10 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-full text-white z-50"></div>
+
+  <script>
+    let currentUser = null;
+    let state = { items: [{ desc: "", qte: 1, pu: 0, total: 0 }] };
+
+    async function callAPI(action, data = {}) {
+      const payload = { action, ...data };
+      try {
+        const response = await fetch(WEB_APP_URL, {
+          method: 'POST',
+          body: JSON.stringify(payload)
+        });
+        return await response.json();
+      } catch (e) {
+        showToast("Erreur de connexion au serveur", "bg-red-500");
+        return { success: false };
+      }
+    }
+
+    function showToast(msg, color = "bg-green-500") {
+      const t = document.getElementById('toast');
+      t.innerText = msg;
+      t.className = `fixed bottom-10 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-full text-white font-bold shadow-xl ${color}`;
+      t.classList.remove('hidden');
+      setTimeout(() => t.classList.add('hidden'), 3000);
+    }
+
+    async function handleLogin() {
+      const user = document.getElementById('username').value;
+      const pass = document.getElementById('password').value;
+      
+      document.getElementById('loginLoader').classList.remove('hidden');
+      const res = await callAPI('login', { username: user, password: pass });
+      
+      if(res.success) {
+        currentUser = res.user;
+        document.getElementById('loginSection').classList.add('hidden');
+        document.getElementById('appSection').classList.remove('hidden');
+        document.getElementById('userDisplay').innerText = "Session: " + user.toUpperCase();
+        loadInitialData(res);
+      } else {
+        showToast("Identifiants incorrects", "bg-red-500");
+        document.getElementById('loginLoader').classList.add('hidden');
+      }
+    }
+
+    function loadInitialData(data) {
+        const dl = document.getElementById('clientList');
+        data.clients.forEach(c => {
+            const opt = document.createElement('option');
+            opt.value = c.name;
+            dl.appendChild(opt);
+        });
+        document.getElementById('docDate').valueAsDate = new Date();
+        refreshStats();
+        resetForm();
+    }
+
+    async function refreshStats() {
+        const res = await callAPI('getStats');
+        document.getElementById('statFacture').innerText = res.countFacture;
+        document.getElementById('statDevis').innerText = res.countDevis;
+    }
+
+    function addRow() {
+        state.items.push({ desc: "", qte: 1, pu: 0, total: 0 });
+        renderItems();
+    }
+
+    function renderItems() {
+        const container = document.getElementById('itemsContainer');
+        container.innerHTML = "";
+        let total = 0;
+        state.items.forEach((item, i) => {
+            total += item.total;
+            const div = document.createElement('div');
+            div.className = "flex gap-2 items-center border-b pb-2";
+            div.innerHTML = `
+                <input class="flex-1 border-none bg-transparent" placeholder="Item" value="${item.desc}" onchange="updateItem(${i}, 'desc', this.value)">
+                <input type="number" class="w-16 border rounded p-1" value="${item.qte}" onchange="updateItem(${i}, 'qte', this.value)">
+                <input type="number" class="w-24 border rounded p-1" value="${item.pu}" onchange="updateItem(${i}, 'pu', this.value)">
+            `;
+            container.appendChild(div);
+        });
+        document.getElementById('totalDisplay').innerText = total.toFixed(2) + " DH";
+    }
+
+    function updateItem(i, field, val) {
+        state.items[i][field] = (field === 'desc') ? val : parseFloat(val) || 0;
+        state.items[i].total = state.items[i].qte * state.items[i].pu;
+        renderItems();
+    }
+
+    async function submitDoc() {
+        const btn = document.getElementById('submitBtn');
+        btn.disabled = true;
+        const data = {
+            prefix: currentUser.prefix,
+            docNumber: document.getElementById('docNumber').value,
+            clientName: document.getElementById('clientName').value,
+            iceNumber: document.getElementById('iceNumber').value,
+            date: formatDate(document.getElementById('docDate').value),
+            items: state.items,
+            role: currentUser.role
+        };
+        const res = await callAPI('submit', { data });
+        if(res.success) {
+            showToast("Enregistré !");
+            resetForm();
+            showTab(1);
+        }
+        btn.disabled = false;
+    }
+
+    function resetForm() {
+        state.items = [{ desc: "", qte: 1, pu: 0, total: 0 }];
+        renderItems();
+    }
+
+    function showTab(n) {
+        [1,2,3].forEach(i => document.getElementById('tab'+i).classList.add('hidden'));
+        document.getElementById('tab'+n).classList.remove('hidden');
+    }
+
+    function formatDate(d) {
+        if(!d) return "";
+        const parts = d.split('-');
+        return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    }
+  </script>
+</body>
+</html>
