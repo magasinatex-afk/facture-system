@@ -15,6 +15,7 @@
     .card { background: white; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
     .btn-primary { background-color: var(--primary); transition: all 0.2s; }
     .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
   </style>
 </head>
 <body class="pb-20">
@@ -52,15 +53,16 @@
   <div id="appSection" class="hidden max-w-4xl mx-auto px-4 pt-6">
     <header class="flex justify-between items-center mb-6">
       <h2 id="userDisplay" class="text-xl font-bold"></h2>
-      <button onclick="location.reload()" class="text-red-500"><i class="fas fa-sign-out-alt"></i></button>
+      <button onclick="location.reload()" class="text-red-500 p-2"><i class="fas fa-sign-out-alt fa-lg"></i></button>
     </header>
 
-    <nav class="flex border-b mb-6 bg-white rounded-t-xl">
+    <nav class="flex border-b mb-6 bg-white rounded-t-xl overflow-hidden">
       <button onclick="showTab(1)" id="tabBtn1" class="flex-1 py-4 tab-active">Stats</button>
       <button onclick="showTab(2)" id="tabBtn2" class="flex-1 py-4 text-gray-500">Saisie</button>
       <button onclick="showTab(3)" id="tabBtn3" class="flex-1 py-4 text-gray-500">Historique</button>
     </nav>
 
+    <!-- Tab 1: Stats -->
     <div id="tab1" class="grid grid-cols-2 gap-4">
         <div class="card p-5 border-l-4 border-blue-500">
             <p class="text-xs font-bold text-gray-500">FACTURES</p>
@@ -72,28 +74,53 @@
         </div>
     </div>
 
+    <!-- Tab 2: Saisie -->
     <div id="tab2" class="hidden space-y-4">
         <div class="card p-6">
             <div class="grid grid-cols-2 gap-4 mb-4">
-                <input type="number" id="docNumber" placeholder="N°" class="border p-2 rounded">
-                <input type="date" id="docDate" class="border p-2 rounded">
+                <div class="flex flex-col">
+                  <label class="text-xs font-bold text-gray-400 mb-1">N° Document</label>
+                  <input type="number" id="docNumber" placeholder="N°" class="border p-2 rounded">
+                </div>
+                <div class="flex flex-col">
+                  <label class="text-xs font-bold text-gray-400 mb-1">Date</label>
+                  <input type="date" id="docDate" class="border p-2 rounded">
+                </div>
             </div>
-            <input list="clientList" id="clientName" placeholder="Nom du Client" class="w-full border p-2 rounded mb-2">
-            <datalist id="clientList"></datalist>
-            <input type="text" id="iceNumber" placeholder="ICE" class="w-full border p-2 rounded">
+            <div class="space-y-4">
+                <div class="flex flex-col">
+                  <label class="text-xs font-bold text-gray-400 mb-1">Client</label>
+                  <input list="clientList" id="clientName" placeholder="Nom du Client" class="w-full border p-2 rounded">
+                  <datalist id="clientList"></datalist>
+                </div>
+                <div class="flex flex-col">
+                  <label class="text-xs font-bold text-gray-400 mb-1">ICE</label>
+                  <input type="text" id="iceNumber" placeholder="ICE" class="w-full border p-2 rounded">
+                </div>
+            </div>
         </div>
         <div class="card p-6">
             <div id="itemsContainer" class="space-y-2"></div>
-            <button onclick="addRow()" class="mt-4 text-blue-600 text-sm font-bold">+ Ajouter une ligne</button>
-            <div class="text-right text-xl font-bold mt-4" id="totalDisplay">0.00 DH</div>
+            <button onclick="addRow()" class="mt-4 text-blue-600 text-sm font-bold flex items-center">
+              <i class="fas fa-plus-circle mr-2"></i> Ajouter une ligne
+            </button>
+            <div class="text-right text-xl font-bold mt-4 pt-4 border-t" id="totalDisplay">0.00 DH</div>
         </div>
-        <button onclick="submitDoc()" id="submitBtn" class="w-full btn-primary text-white py-4 rounded-xl font-bold">Enregistrer</button>
+        <button onclick="submitDoc()" id="submitBtn" class="w-full btn-primary text-white py-4 rounded-xl font-bold shadow-lg">
+          <span id="submitText">Enregistrer & Générer</span>
+        </button>
     </div>
 
-    <div id="tab3" class="hidden space-y-3" id="historyList"></div>
+    <!-- Tab 3: Historique -->
+    <div id="tab3" class="hidden space-y-3">
+        <div id="historyList" class="space-y-3">
+          <p class="text-center text-gray-400 py-10">Chargement de l'historique...</p>
+        </div>
+    </div>
   </div>
 
-  <div id="toast" class="hidden fixed bottom-10 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-full text-white z-50"></div>
+  <!-- Notifications -->
+  <div id="toast" class="hidden fixed bottom-10 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-full text-white z-50 shadow-2xl transition-all duration-300"></div>
 
   <script>
     let currentUser = null;
@@ -108,7 +135,7 @@
         });
         return await response.json();
       } catch (e) {
-        showToast("Erreur de connexion au serveur", "bg-red-500");
+        showToast("Erreur de connexion", "bg-red-500");
         return { success: false };
       }
     }
@@ -124,24 +151,30 @@
     async function handleLogin() {
       const user = document.getElementById('username').value;
       const pass = document.getElementById('password').value;
+      const btn = document.getElementById('loginBtn');
+      const loader = document.getElementById('loginLoader');
       
-      document.getElementById('loginLoader').classList.remove('hidden');
+      btn.disabled = true;
+      loader.classList.remove('hidden');
+      
       const res = await callAPI('login', { username: user, password: pass });
       
       if(res.success) {
         currentUser = res.user;
         document.getElementById('loginSection').classList.add('hidden');
         document.getElementById('appSection').classList.remove('hidden');
-        document.getElementById('userDisplay').innerText = "Session: " + user.toUpperCase();
+        document.getElementById('userDisplay').innerText = (currentUser.role === 'facture' ? "FACTURES" : "DEVIS");
         loadInitialData(res);
       } else {
         showToast("Identifiants incorrects", "bg-red-500");
-        document.getElementById('loginLoader').classList.add('hidden');
+        loader.classList.add('hidden');
+        btn.disabled = false;
       }
     }
 
     function loadInitialData(data) {
         const dl = document.getElementById('clientList');
+        dl.innerHTML = "";
         data.clients.forEach(c => {
             const opt = document.createElement('option');
             opt.value = c.name;
@@ -154,8 +187,33 @@
 
     async function refreshStats() {
         const res = await callAPI('getStats');
-        document.getElementById('statFacture').innerText = res.countFacture;
-        document.getElementById('statDevis').innerText = res.countDevis;
+        if(res.countFacture !== undefined) {
+          document.getElementById('statFacture').innerText = res.countFacture;
+          document.getElementById('statDevis').innerText = res.countDevis;
+        }
+    }
+
+    async function loadHistory() {
+        const container = document.getElementById('historyList');
+        const res = await callAPI('getHistory');
+        if(res && Array.isArray(res)) {
+            container.innerHTML = res.length ? "" : '<p class="text-center text-gray-400 py-10">Aucun document trouvé</p>';
+            res.forEach(item => {
+                const div = document.createElement('div');
+                div.className = "card p-4 flex justify-between items-center";
+                div.innerHTML = `
+                    <div>
+                        <p class="font-bold text-blue-600">${item.docId}</p>
+                        <p class="text-sm font-medium">${item.client}</p>
+                        <p class="text-xs text-gray-400">${item.date}</p>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-600 uppercase font-bold">${item.role}</span>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
     }
 
     function addRow() {
@@ -170,15 +228,19 @@
         state.items.forEach((item, i) => {
             total += item.total;
             const div = document.createElement('div');
-            div.className = "flex gap-2 items-center border-b pb-2";
+            div.className = "flex gap-2 items-center border-b pb-3";
             div.innerHTML = `
-                <input class="flex-1 border-none bg-transparent" placeholder="Item" value="${item.desc}" onchange="updateItem(${i}, 'desc', this.value)">
-                <input type="number" class="w-16 border rounded p-1" value="${item.qte}" onchange="updateItem(${i}, 'qte', this.value)">
-                <input type="number" class="w-24 border rounded p-1" value="${item.pu}" onchange="updateItem(${i}, 'pu', this.value)">
+                <div class="flex-1">
+                   <input class="w-full text-sm font-medium border-none focus:ring-0 p-0 bg-transparent" placeholder="Description..." value="${item.desc}" onchange="updateItem(${i}, 'desc', this.value)">
+                </div>
+                <div class="flex gap-2">
+                  <input type="number" class="w-14 border rounded p-1 text-center text-sm" placeholder="Qté" value="${item.qte}" onchange="updateItem(${i}, 'qte', this.value)">
+                  <input type="number" class="w-20 border rounded p-1 text-right text-sm" placeholder="P.U" value="${item.pu}" onchange="updateItem(${i}, 'pu', this.value)">
+                </div>
             `;
             container.appendChild(div);
         });
-        document.getElementById('totalDisplay').innerText = total.toFixed(2) + " DH";
+        document.getElementById('totalDisplay').innerText = total.toLocaleString('fr-FR', { minimumFractionDigits: 2 }) + " DH";
     }
 
     function updateItem(i, field, val) {
@@ -189,33 +251,57 @@
 
     async function submitDoc() {
         const btn = document.getElementById('submitBtn');
+        const text = document.getElementById('submitText');
+        
+        if(!document.getElementById('docNumber').value || !document.getElementById('clientName').value) {
+            showToast("Veuillez remplir les champs obligatoires", "bg-orange-500");
+            return;
+        }
+
         btn.disabled = true;
+        text.innerText = "Traitement en cours...";
+        
         const data = {
             prefix: currentUser.prefix,
             docNumber: document.getElementById('docNumber').value,
             clientName: document.getElementById('clientName').value,
             iceNumber: document.getElementById('iceNumber').value,
             date: formatDate(document.getElementById('docDate').value),
-            items: state.items,
+            items: state.items.filter(it => it.desc.trim() !== ""),
             role: currentUser.role
         };
+        
         const res = await callAPI('submit', { data });
         if(res.success) {
-            showToast("Enregistré !");
+            showToast("Enregistré avec succès !");
             resetForm();
+            refreshStats();
             showTab(1);
+        } else {
+            showToast("Erreur: " + res.message, "bg-red-500");
         }
         btn.disabled = false;
+        text.innerText = "Enregistrer";
     }
 
     function resetForm() {
         state.items = [{ desc: "", qte: 1, pu: 0, total: 0 }];
+        document.getElementById('docNumber').value = "";
+        document.getElementById('clientName').value = "";
+        document.getElementById('iceNumber').value = "";
         renderItems();
     }
 
     function showTab(n) {
-        [1,2,3].forEach(i => document.getElementById('tab'+i).classList.add('hidden'));
+        [1,2,3].forEach(i => {
+            document.getElementById('tab'+i).classList.add('hidden');
+            document.getElementById('tabBtn'+i).className = "flex-1 py-4 text-gray-500";
+        });
         document.getElementById('tab'+n).classList.remove('hidden');
+        document.getElementById('tabBtn'+n).className = "flex-1 py-4 tab-active";
+        
+        if(n === 3) loadHistory();
+        if(n === 1) refreshStats();
     }
 
     function formatDate(d) {
