@@ -7,145 +7,214 @@
   <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <style>
-    :root { --primary: #2563eb; }
-    body { background-color: #f8fafc; font-family: 'Segoe UI', system-ui, sans-serif; }
-    .loader { border-top-color: var(--primary); animation: spinner 0.6s linear infinite; }
+    :root { --primary: #2563eb; --primary-dark: #1e40af; }
+    body { background-color: #f1f5f9; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
+    
+    .loader { border-top-color: white; animation: spinner 0.6s linear infinite; }
     @keyframes spinner { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    .tab-active { border-bottom: 3px solid var(--primary); color: var(--primary); font-weight: 700; }
-    .card { background: white; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
-    .btn-primary { background-color: var(--primary); transition: all 0.2s; }
-    .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
-    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    
+    .tab-active { border-bottom: 3px solid var(--primary); color: var(--primary); font-weight: 700; background: rgba(37, 99, 235, 0.05); }
+    .card { background: white; border-radius: 16px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); transition: transform 0.2s; }
+    
+    .btn-primary { background-color: var(--primary); transition: all 0.2s; border: none; outline: none; }
+    .btn-primary:hover { background-color: var(--primary-dark); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3); }
+    .btn-primary:active { transform: translateY(0); }
+    .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; box-shadow: none; }
+
+    input:focus, select:focus { border-color: var(--primary); ring: 2px; ring-color: rgba(37, 99, 235, 0.2); outline: none; }
+    
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #f1f1f1; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
   </style>
 </head>
-<body class="pb-20">
+<body class="pb-24">
 
-  <!-- CONFIGURATION - REPLACE THIS URL -->
+  <!-- CONFIGURATION -->
   <script>
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzOsKtFhZrF2OlSCqwLMPRTso5riYDp7JpwXVjfxKFyLSpSGd8YqVwUo-h2xRbmVW6-/exec"; 
   </script>
 
-  <!-- Login Overlay -->
-  <div id="loginSection" class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-50">
-    <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md mx-4">
+  <!-- Login Section -->
+  <div id="loginSection" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900 bg-opacity-80 backdrop-blur-sm">
+    <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md mx-4 transform transition-all">
       <div class="text-center mb-8">
-        <div class="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
-          <i class="fas fa-file-invoice-dollar fa-2x"></i>
+        <div class="w-20 h-20 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4 rotate-3">
+          <i class="fas fa-file-invoice-dollar fa-3x"></i>
         </div>
-        <h1 class="text-2xl font-bold text-gray-800">Système Cloud</h1>
-        <p class="text-gray-500">Accès GitHub Pro</p>
+        <h1 class="text-2xl font-black text-gray-800 tracking-tight">SOLUTIONS CLOUD</h1>
+        <p class="text-gray-500 font-medium">Gestion de Facturation Pro</p>
       </div>
       <div class="space-y-4">
-        <select id="username" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none">
-          <option value="facture">FACTURE (F)</option>
-          <option value="devis">DEVIS (D)</option>
-        </select>
-        <input type="password" id="password" placeholder="Mot de passe" class="w-full px-4 py-3 rounded-lg border border-gray-300">
-        <button onclick="handleLogin()" id="loginBtn" class="w-full btn-primary text-white font-bold py-3 rounded-lg flex items-center justify-center">
-          <span id="loginBtnText">Se connecter</span>
-          <div id="loginLoader" class="hidden loader w-5 h-5 border-2 border-white rounded-full ml-2"></div>
+        <div>
+          <label class="block text-xs font-bold text-gray-400 uppercase mb-1 ml-1">Type de compte</label>
+          <select id="username" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 bg-gray-50 font-semibold">
+            <option value="facture">📂 FACTURATION (Série F)</option>
+            <option value="devis">📝 DEVIS (Série D)</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-gray-400 uppercase mb-1 ml-1">Mot de passe</label>
+          <input type="password" id="password" placeholder="••••••••" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 bg-gray-50">
+        </div>
+        <button onclick="handleLogin()" id="loginBtn" class="w-full btn-primary text-white font-bold py-4 rounded-xl flex items-center justify-center shadow-lg mt-6">
+          <span id="loginBtnText">Ouvrir la session</span>
+          <div id="loginLoader" class="hidden loader w-5 h-5 border-2 border-transparent border-t-white rounded-full ml-3"></div>
         </button>
       </div>
     </div>
   </div>
 
-  <!-- App Content (Hidden until login) -->
-  <div id="appSection" class="hidden max-w-4xl mx-auto px-4 pt-6">
-    <header class="flex justify-between items-center mb-6">
-      <h2 id="userDisplay" class="text-xl font-bold"></h2>
-      <button onclick="location.reload()" class="text-red-500 p-2"><i class="fas fa-sign-out-alt fa-lg"></i></button>
+  <!-- App Content -->
+  <div id="appSection" class="hidden max-w-3xl mx-auto px-4 pt-8">
+    <header class="flex justify-between items-center mb-8">
+      <div>
+        <h2 id="userDisplay" class="text-2xl font-black text-gray-800 tracking-tight uppercase"></h2>
+        <p class="text-gray-500 text-sm font-medium">Connecté en tant qu'administrateur</p>
+      </div>
+      <button onclick="location.reload()" class="bg-white text-gray-400 hover:text-red-500 w-12 h-12 rounded-xl shadow-sm flex items-center justify-center transition-colors">
+        <i class="fas fa-power-off fa-lg"></i>
+      </button>
     </header>
 
-    <nav class="flex border-b mb-6 bg-white rounded-t-xl overflow-hidden">
-      <button onclick="showTab(1)" id="tabBtn1" class="flex-1 py-4 tab-active">Stats</button>
-      <button onclick="showTab(2)" id="tabBtn2" class="flex-1 py-4 text-gray-500">Saisie</button>
-      <button onclick="showTab(3)" id="tabBtn3" class="flex-1 py-4 text-gray-500">Historique</button>
+    <nav class="flex bg-white rounded-2xl shadow-sm p-1 mb-8 overflow-hidden">
+      <button onclick="showTab(1)" id="tabBtn1" class="flex-1 py-3 rounded-xl transition-all flex items-center justify-center gap-2 tab-active">
+        <i class="fas fa-chart-pie text-sm"></i> <span>Tableau</span>
+      </button>
+      <button onclick="showTab(2)" id="tabBtn2" class="flex-1 py-3 rounded-xl transition-all flex items-center justify-center gap-2 text-gray-500">
+        <i class="fas fa-plus-circle text-sm"></i> <span>Nouveau</span>
+      </button>
+      <button onclick="showTab(3)" id="tabBtn3" class="flex-1 py-3 rounded-xl transition-all flex items-center justify-center gap-2 text-gray-500">
+        <i class="fas fa-history text-sm"></i> <span>Historique</span>
+      </button>
     </nav>
 
-    <!-- Tab 1: Stats -->
-    <div id="tab1" class="grid grid-cols-2 gap-4">
-        <div class="card p-5 border-l-4 border-blue-500">
-            <p class="text-xs font-bold text-gray-500">FACTURES</p>
-            <h3 id="statFacture" class="text-2xl font-black">0</h3>
+    <!-- Tab 1: Dashboard -->
+    <div id="tab1" class="space-y-6">
+      <div class="grid grid-cols-2 gap-4">
+          <div class="card p-6 bg-gradient-to-br from-blue-600 to-blue-700 text-white">
+              <div class="flex justify-between items-start mb-4">
+                <i class="fas fa-file-invoice fa-lg opacity-50"></i>
+                <span class="text-[10px] font-bold bg-white bg-opacity-20 px-2 py-1 rounded">GLOBAL</span>
+              </div>
+              <p class="text-xs font-bold opacity-80 uppercase tracking-wider">Factures</p>
+              <h3 id="statFacture" class="text-3xl font-black mt-1">0</h3>
+          </div>
+          <div class="card p-6 bg-white border-b-4 border-emerald-500">
+              <div class="flex justify-between items-start mb-4">
+                <i class="fas fa-file-alt fa-lg text-emerald-500"></i>
+              </div>
+              <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Devis</p>
+              <h3 id="statDevis" class="text-3xl font-black text-gray-800 mt-1">0</h3>
+          </div>
+      </div>
+      <div class="card p-6 flex items-center justify-between">
+        <div class="flex items-center gap-4">
+          <div class="w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center">
+            <i class="fas fa-rocket"></i>
+          </div>
+          <div>
+            <h4 class="font-bold text-gray-800">Prêt à commencer ?</h4>
+            <p class="text-sm text-gray-500">Créez votre document en un clic</p>
+          </div>
         </div>
-        <div class="card p-5 border-l-4 border-green-500">
-            <p class="text-xs font-bold text-gray-500">DEVIS</p>
-            <h3 id="statDevis" class="text-2xl font-black">0</h3>
-        </div>
+        <button onclick="showTab(2)" class="text-blue-600 font-bold text-sm">Action <i class="fas fa-chevron-right ml-1"></i></button>
+      </div>
     </div>
 
-    <!-- Tab 2: Saisie -->
-    <div id="tab2" class="hidden space-y-4">
-        <div class="card p-6">
-            <div class="grid grid-cols-2 gap-4 mb-4">
-                <div class="flex flex-col">
-                  <label class="text-xs font-bold text-gray-400 mb-1">N° Document</label>
-                  <input type="number" id="docNumber" placeholder="N°" class="border p-2 rounded">
+    <!-- Tab 2: Creation Form -->
+    <div id="tab2" class="hidden animate-fade-in space-y-4">
+        <div class="card p-6 space-y-6">
+            <div class="grid grid-cols-2 gap-6">
+                <div class="space-y-1">
+                  <label class="text-[11px] font-black text-gray-400 uppercase tracking-widest ml-1">Numéro</label>
+                  <div class="relative">
+                    <span id="prefixSpan" class="absolute left-3 top-2.5 font-bold text-gray-400"></span>
+                    <input type="number" id="docNumber" placeholder="001" class="w-full border-gray-200 border bg-gray-50 p-2.5 rounded-xl font-bold pl-8">
+                  </div>
                 </div>
-                <div class="flex flex-col">
-                  <label class="text-xs font-bold text-gray-400 mb-1">Date</label>
-                  <input type="date" id="docDate" class="border p-2 rounded">
+                <div class="space-y-1">
+                  <label class="text-[11px] font-black text-gray-400 uppercase tracking-widest ml-1">Date d'émission</label>
+                  <input type="date" id="docDate" class="w-full border-gray-200 border bg-gray-50 p-2.5 rounded-xl font-semibold text-sm">
                 </div>
             </div>
-            <div class="space-y-4">
-                <div class="flex flex-col">
-                  <label class="text-xs font-bold text-gray-400 mb-1">Client</label>
-                  <input list="clientList" id="clientName" placeholder="Nom du Client" class="w-full border p-2 rounded">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="space-y-1">
+                  <label class="text-[11px] font-black text-gray-400 uppercase tracking-widest ml-1">Client</label>
+                  <input list="clientList" id="clientName" placeholder="Rechercher ou saisir..." class="w-full border-gray-200 border bg-gray-50 p-2.5 rounded-xl font-medium">
                   <datalist id="clientList"></datalist>
                 </div>
-                <div class="flex flex-col">
-                  <label class="text-xs font-bold text-gray-400 mb-1">ICE</label>
-                  <input type="text" id="iceNumber" placeholder="ICE" class="w-full border p-2 rounded">
+                <div class="space-y-1">
+                  <label class="text-[11px] font-black text-gray-400 uppercase tracking-widest ml-1">Identifiant ICE</label>
+                  <input type="text" id="iceNumber" placeholder="000000..." class="w-full border-gray-200 border bg-gray-50 p-2.5 rounded-xl font-medium">
                 </div>
             </div>
         </div>
-        <div class="card p-6">
-            <div id="itemsContainer" class="space-y-2"></div>
-            <button onclick="addRow()" class="mt-4 text-blue-600 text-sm font-bold flex items-center">
-              <i class="fas fa-plus-circle mr-2"></i> Ajouter une ligne
-            </button>
-            <div class="text-right text-xl font-bold mt-4 pt-4 border-t" id="totalDisplay">0.00 DH</div>
+
+        <div class="card p-6 overflow-hidden">
+            <h3 class="text-xs font-black text-gray-400 uppercase tracking-widest mb-4 border-b pb-2">Détails des prestations</h3>
+            <div id="itemsContainer" class="space-y-3"></div>
+            
+            <div class="flex justify-between items-center mt-6 pt-4 border-t border-dashed">
+              <button onclick="addRow()" class="bg-gray-100 hover:bg-gray-200 text-gray-600 px-4 py-2 rounded-xl text-xs font-bold transition-colors">
+                <i class="fas fa-plus mr-2"></i> Ajouter un article
+              </button>
+              <div class="text-right">
+                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">Total Net à Payer</p>
+                <div class="text-2xl font-black text-blue-600" id="totalDisplay">0.00 DH</div>
+              </div>
+            </div>
         </div>
-        <button onclick="submitDoc()" id="submitBtn" class="w-full btn-primary text-white py-4 rounded-xl font-bold shadow-lg">
-          <span id="submitText">Enregistrer & Générer</span>
+
+        <button onclick="submitDoc()" id="submitBtn" class="w-full btn-primary text-white py-4 rounded-2xl font-black shadow-xl flex items-center justify-center gap-3">
+          <i class="fas fa-paper-plane text-sm opacity-50"></i>
+          <span id="submitText">VALIDER ET GÉNÉRER</span>
         </button>
     </div>
 
-    <!-- Tab 3: Historique -->
+    <!-- Tab 3: History -->
     <div id="tab3" class="hidden space-y-3">
         <div id="historyList" class="space-y-3">
-          <p class="text-center text-gray-400 py-10">Chargement de l'historique...</p>
+          <div class="text-center py-20">
+            <div class="loader w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full mx-auto mb-4"></div>
+            <p class="text-gray-400 font-medium italic">Synchronisation Cloud...</p>
+          </div>
         </div>
     </div>
   </div>
 
-  <!-- Notifications -->
-  <div id="toast" class="hidden fixed bottom-10 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-full text-white z-50 shadow-2xl transition-all duration-300"></div>
+  <!-- Toast Notification -->
+  <div id="toast" class="hidden fixed bottom-10 left-1/2 transform -translate-x-1/2 px-8 py-4 rounded-2xl text-white font-bold z-50 shadow-2xl transition-all duration-300 flex items-center gap-3"></div>
 
   <script>
     let currentUser = null;
     let state = { items: [{ desc: "", qte: 1, pu: 0, total: 0 }] };
 
+    // Login on Enter key
+    document.getElementById('password').addEventListener('keypress', e => {
+      if(e.key === 'Enter') handleLogin();
+    });
+
     async function callAPI(action, data = {}) {
-      const payload = { action, ...data };
       try {
         const response = await fetch(WEB_APP_URL, {
           method: 'POST',
-          body: JSON.stringify(payload)
+          body: JSON.stringify({ action, ...data })
         });
         return await response.json();
       } catch (e) {
-        showToast("Erreur de connexion", "bg-red-500");
+        showToast("Erreur de connexion serveur", "bg-red-600");
         return { success: false };
       }
     }
 
-    function showToast(msg, color = "bg-green-500") {
+    function showToast(msg, color = "bg-blue-600") {
       const t = document.getElementById('toast');
-      t.innerText = msg;
-      t.className = `fixed bottom-10 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-full text-white font-bold shadow-xl ${color}`;
+      t.innerHTML = `<i class="fas fa-info-circle"></i> <span>${msg}</span>`;
+      t.className = `fixed bottom-10 left-1/2 transform -translate-x-1/2 px-8 py-4 rounded-2xl text-white font-bold z-50 shadow-2xl transition-all ${color}`;
       t.classList.remove('hidden');
-      setTimeout(() => t.classList.add('hidden'), 3000);
+      setTimeout(() => t.classList.add('hidden'), 4000);
     }
 
     async function handleLogin() {
@@ -153,9 +222,13 @@
       const pass = document.getElementById('password').value;
       const btn = document.getElementById('loginBtn');
       const loader = document.getElementById('loginLoader');
+      const text = document.getElementById('loginBtnText');
       
+      if(!pass) return showToast("Saisir mot de passe", "bg-orange-500");
+
       btn.disabled = true;
       loader.classList.remove('hidden');
+      text.innerText = "Authentification...";
       
       const res = await callAPI('login', { username: user, password: pass });
       
@@ -163,11 +236,13 @@
         currentUser = res.user;
         document.getElementById('loginSection').classList.add('hidden');
         document.getElementById('appSection').classList.remove('hidden');
-        document.getElementById('userDisplay').innerText = (currentUser.role === 'facture' ? "FACTURES" : "DEVIS");
+        document.getElementById('userDisplay').innerText = (currentUser.role === 'facture' ? "Facturation" : "Devis");
+        document.getElementById('prefixSpan').innerText = currentUser.prefix;
         loadInitialData(res);
       } else {
-        showToast("Identifiants incorrects", "bg-red-500");
+        showToast("Accès refusé : Identifiants invalides", "bg-red-600");
         loader.classList.add('hidden');
+        text.innerText = "Ouvrir la session";
         btn.disabled = false;
       }
     }
@@ -175,11 +250,13 @@
     function loadInitialData(data) {
         const dl = document.getElementById('clientList');
         dl.innerHTML = "";
-        data.clients.forEach(c => {
-            const opt = document.createElement('option');
-            opt.value = c.name;
-            dl.appendChild(opt);
-        });
+        if(data.clients) {
+          data.clients.forEach(c => {
+              const opt = document.createElement('option');
+              opt.value = c.name;
+              dl.appendChild(opt);
+          });
+        }
         document.getElementById('docDate').valueAsDate = new Date();
         refreshStats();
         resetForm();
@@ -187,7 +264,7 @@
 
     async function refreshStats() {
         const res = await callAPI('getStats');
-        if(res.countFacture !== undefined) {
+        if(res && res.countFacture !== undefined) {
           document.getElementById('statFacture').innerText = res.countFacture;
           document.getElementById('statDevis').innerText = res.countDevis;
         }
@@ -197,18 +274,24 @@
         const container = document.getElementById('historyList');
         const res = await callAPI('getHistory');
         if(res && Array.isArray(res)) {
-            container.innerHTML = res.length ? "" : '<p class="text-center text-gray-400 py-10">Aucun document trouvé</p>';
+            container.innerHTML = res.length ? "" : '<div class="card p-12 text-center text-gray-400 italic">Aucun document dans le cloud</div>';
             res.forEach(item => {
+                const isFacture = item.docId.startsWith('F');
                 const div = document.createElement('div');
-                div.className = "card p-4 flex justify-between items-center";
+                div.className = "card p-5 flex justify-between items-center border-l-4 " + (isFacture ? "border-blue-500" : "border-emerald-500");
                 div.innerHTML = `
-                    <div>
-                        <p class="font-bold text-blue-600">${item.docId}</p>
-                        <p class="text-sm font-medium">${item.client}</p>
-                        <p class="text-xs text-gray-400">${item.date}</p>
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center text-gray-400">
+                          <i class="fas ${isFacture ? 'fa-file-invoice' : 'fa-file-alt'}"></i>
+                        </div>
+                        <div>
+                            <p class="font-black text-gray-800">${item.docId}</p>
+                            <p class="text-xs font-bold text-gray-400 uppercase">${item.client}</p>
+                        </div>
                     </div>
                     <div class="text-right">
-                        <span class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-600 uppercase font-bold">${item.role}</span>
+                        <p class="text-xs font-bold text-gray-800">${item.date}</p>
+                        <span class="text-[9px] font-black uppercase text-blue-500 tracking-tighter">${item.role}</span>
                     </div>
                 `;
                 container.appendChild(div);
@@ -221,6 +304,16 @@
         renderItems();
     }
 
+    function removeRow(index) {
+        if(state.items.length > 1) {
+            state.items.splice(index, 1);
+            renderItems();
+        } else {
+            state.items[0] = { desc: "", qte: 1, pu: 0, total: 0 };
+            renderItems();
+        }
+    }
+
     function renderItems() {
         const container = document.getElementById('itemsContainer');
         container.innerHTML = "";
@@ -228,14 +321,17 @@
         state.items.forEach((item, i) => {
             total += item.total;
             const div = document.createElement('div');
-            div.className = "flex gap-2 items-center border-b pb-3";
+            div.className = "flex gap-3 items-start bg-gray-50 p-3 rounded-xl border border-gray-100 group";
             div.innerHTML = `
                 <div class="flex-1">
-                   <input class="w-full text-sm font-medium border-none focus:ring-0 p-0 bg-transparent" placeholder="Description..." value="${item.desc}" onchange="updateItem(${i}, 'desc', this.value)">
+                   <input class="w-full text-sm font-bold bg-transparent border-none p-0 focus:ring-0 placeholder-gray-300" placeholder="Libellé de l'article..." value="${item.desc}" oninput="updateItem(${i}, 'desc', this.value)">
                 </div>
-                <div class="flex gap-2">
-                  <input type="number" class="w-14 border rounded p-1 text-center text-sm" placeholder="Qté" value="${item.qte}" onchange="updateItem(${i}, 'qte', this.value)">
-                  <input type="number" class="w-20 border rounded p-1 text-right text-sm" placeholder="P.U" value="${item.pu}" onchange="updateItem(${i}, 'pu', this.value)">
+                <div class="flex gap-2 items-center">
+                  <input type="number" class="w-12 border-none bg-white rounded-lg shadow-sm p-1 text-center text-xs font-bold" placeholder="Qte" value="${item.qte}" oninput="updateItem(${i}, 'qte', this.value)">
+                  <input type="number" class="w-20 border-none bg-white rounded-lg shadow-sm p-1 text-right text-xs font-bold" placeholder="P.U" value="${item.pu}" oninput="updateItem(${i}, 'pu', this.value)">
+                  <button onclick="removeRow(${i})" class="text-gray-300 hover:text-red-500 transition-colors px-1">
+                    <i class="fas fa-times-circle"></i>
+                  </button>
                 </div>
             `;
             container.appendChild(div);
@@ -246,42 +342,47 @@
     function updateItem(i, field, val) {
         state.items[i][field] = (field === 'desc') ? val : parseFloat(val) || 0;
         state.items[i].total = state.items[i].qte * state.items[i].pu;
-        renderItems();
+        
+        // Update display without re-rendering everything to keep focus
+        let total = state.items.reduce((acc, curr) => acc + curr.total, 0);
+        document.getElementById('totalDisplay').innerText = total.toLocaleString('fr-FR', { minimumFractionDigits: 2 }) + " DH";
     }
 
     async function submitDoc() {
         const btn = document.getElementById('submitBtn');
         const text = document.getElementById('submitText');
         
-        if(!document.getElementById('docNumber').value || !document.getElementById('clientName').value) {
-            showToast("Veuillez remplir les champs obligatoires", "bg-orange-500");
-            return;
-        }
+        const num = document.getElementById('docNumber').value;
+        const client = document.getElementById('clientName').value;
+        const items = state.items.filter(it => it.desc.trim() !== "");
+
+        if(!num || !client) return showToast("Champs obligatoires manquants !", "bg-orange-500");
+        if(items.length === 0) return showToast("Ajoutez au moins une ligne !", "bg-orange-500");
 
         btn.disabled = true;
-        text.innerText = "Traitement en cours...";
+        text.innerText = "Synchronisation Cloud...";
         
         const data = {
             prefix: currentUser.prefix,
-            docNumber: document.getElementById('docNumber').value,
-            clientName: document.getElementById('clientName').value,
-            iceNumber: document.getElementById('iceNumber').value,
+            docNumber: num,
+            clientName: client,
+            iceNumber: document.getElementById('iceNumber').value || "N/A",
             date: formatDate(document.getElementById('docDate').value),
-            items: state.items.filter(it => it.desc.trim() !== ""),
+            items: items,
             role: currentUser.role
         };
         
         const res = await callAPI('submit', { data });
         if(res.success) {
-            showToast("Enregistré avec succès !");
+            showToast("Document généré avec succès !");
             resetForm();
             refreshStats();
-            showTab(1);
+            setTimeout(() => showTab(1), 500);
         } else {
-            showToast("Erreur: " + res.message, "bg-red-500");
+            showToast("Erreur Cloud: " + (res.message || "Inconnue"), "bg-red-600");
         }
         btn.disabled = false;
-        text.innerText = "Enregistrer";
+        text.innerText = "VALIDER ET GÉNÉRER";
     }
 
     function resetForm() {
@@ -289,16 +390,17 @@
         document.getElementById('docNumber').value = "";
         document.getElementById('clientName').value = "";
         document.getElementById('iceNumber').value = "";
+        document.getElementById('docDate').valueAsDate = new Date();
         renderItems();
     }
 
     function showTab(n) {
         [1,2,3].forEach(i => {
             document.getElementById('tab'+i).classList.add('hidden');
-            document.getElementById('tabBtn'+i).className = "flex-1 py-4 text-gray-500";
+            document.getElementById('tabBtn'+i).className = "flex-1 py-3 rounded-xl transition-all flex items-center justify-center gap-2 text-gray-400";
         });
         document.getElementById('tab'+n).classList.remove('hidden');
-        document.getElementById('tabBtn'+n).className = "flex-1 py-4 tab-active";
+        document.getElementById('tabBtn'+n).className = "flex-1 py-3 rounded-xl transition-all flex items-center justify-center gap-2 tab-active shadow-sm";
         
         if(n === 3) loadHistory();
         if(n === 1) refreshStats();
